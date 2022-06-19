@@ -14,15 +14,18 @@ app.get("/", async (req, res) => {
                 <title>tprox</title>
             </head>
             <body>
+				<h1>TProx</h1>
                 <form action="/go" method="POST">
-                    <label for="fname">URL:</label><br>
-                    <input type="text" id="fname" name="url" value="https://www.google.com/"><br><br>
-                    <input type="checkbox" id="vehicle1" name="scripts" value="true">
-                    <label for="vehicle1"> Remove Scripts</label><br>
-                    <input type="checkbox" id="vehicle2" name="canvas" value="true">
-                    <label for="vehicle2"> Remove Canvases</label><br>
-                    <input type="checkbox" id="vehicle3" name="lstorage" value="true">
-                    <label for="vehicle3"> Remove LocalStorage</label>
+                    <label for="furl">URL:</label><br>
+                    <input type="text" id="furl" name="url" value="https://www.google.com/"><br><br>
+                    <input type="checkbox" id="fscripts" name="scripts" value="true">
+                    <label for="fscripts"> Remove Scripts</label><br>
+                    <input type="checkbox" id="fcanvas" name="canvas" value="true">
+                    <label for="fcanvas"> Remove Canvases</label><br>
+					<input type="checkbox" id="ftitle" name="title" value="true">
+                    <label for="ftitle"> Remove Page Title</label><br>
+                    <input type="checkbox" id="flocalstorage" name="lstorage" value="true">
+                    <label for="flocalstorage"> Remove LocalStorage</label>
                     <br><br><input type="submit" value="Submit">
                 </form>
             </body>
@@ -64,10 +67,11 @@ var processOpts = (fdata, body) => {
     var b = body
     const script = new RegExp('<+script(.+?)((<+\\/script>+)|(\\/>))', 'gmis')
     const canvas = new RegExp('<+canvas(.+?)((<+\\/canvas>+)|(\\/>))', 'gmis')
+    const title = new RegExp('<+title(.+?)((<+\\/title>+)|(\\/>))', 'gmis')
 
     if(fdata.scripts) b = b.replace(script, "<!-- Script Omitted by TProx -->")
     if(fdata.canvas) b = b.replace(canvas, "<!-- Canvas Omitted by TProx -->")
-
+    if(fdata.title) b = b.replace(title, "<!-- Title Omitted by TProx -->")
     if(fdata.lstorage) b += `<script>/* Added by TProx */\nsetInterval(()=>{window.localStorage.clear()}, 100)</script>`
 
     return b

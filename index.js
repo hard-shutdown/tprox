@@ -4,6 +4,7 @@ app.use(express.json())
 app.use(express.urlencoded())
 
 var request = require("request")
+var mime = require("mime")
 const { URL } = require("url")
 
 app.get("/", async (req, res) => {
@@ -15,7 +16,7 @@ app.get("/", async (req, res) => {
             </head>
             <body>
 				<h1>TProx</h1>
-                <form action="/go" method="POST">
+                <form action="/go" id="form">
                     <label for="furl">URL:</label><br>
                     <input type="text" id="furl" name="url" value="https://www.google.com/"><br><br>
                     <input type="checkbox" id="fscripts" name="scripts" value="true">
@@ -28,6 +29,21 @@ app.get("/", async (req, res) => {
                     <label for="flocalstorage"> Remove LocalStorage</label>
                     <br><br><input type="submit" value="Submit">
                 </form>
+				<script>
+				function processForm(e) {
+                    if (e.preventDefault) e.preventDefault();
+                    document.location = '/go?url=' + encodeURIComponent(document.getElementById("furl").value)
+                    return false;
+                }
+
+                var form = document.getElementById('form');
+                if (form.attachEvent) {
+                    form.attachEvent("submit", processForm);
+                } else {
+                    form.addEventListener("submit", processForm);
+                }
+				
+				</script>
             </body>
         </html>
     `)
@@ -37,8 +53,23 @@ app.post("/go", async (req, res) => {
     handlePage(req, res)
 })
 app.get("/go", async (req, res) => {
-    req.body = {url: req.query.url, scripts: req.query.scripts, canvas: req.query.canvas, lstorage: req.query.lstorage}
+    req.body = {url: req.query.url, scripts: req.query.scripts, canvas: req.query.canvas, lstorage: req.query.lstorage, title: req.query.title}
     handlePage(req, res)
+})
+
+app.get("/asset", async (req, res) => {
+	const options = {
+        url: req.query.url,
+        headers: {
+		    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36'
+        }
+	}	
+	request(options, async (e, r, b) => {
+		if(!e && r.statusCode == 200) {
+			var mtype = mime.getType(req.query.url.split(".")[req.query.url.split(".").length - 1])
+			res.set("Content-Type", mtype).send(b).end()
+		}
+	})
 })
 
 app.listen(process.env["PORT"] || 3000)
@@ -50,7 +81,7 @@ async function handlePage(req, res) {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36'
         }
-    };
+    }
     request(options, async (e, r, b) => {
         if(!e && r.statusCode == 200) {
             b = processOpts(req.body, b)

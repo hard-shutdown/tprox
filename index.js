@@ -70,12 +70,16 @@ app.get("/asset", async (req, res) => {
 		    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36'
         }
 	}	
+	try{
 	request.request(options, async (e, r, b) => {
 		if(!e && r.statusCode == 200) {
 			var mtype = mime.getType(new URL(req.query.url).pathname.split(".")[new URL(req.query.url).pathname.split(".").length - 1])
 			res.writeHead("Content-Type", mtype).send(b).end()
 		}
 	})
+	} catch (e) {
+	    console.log(e)
+	}
 })
 
 app.listen(process.env["PORT"] || 3000)

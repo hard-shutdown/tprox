@@ -73,7 +73,7 @@ app.get("/asset", async (req, res) => {
 	request.request(options, async (e, r, b) => {
 		if(!e && r.statusCode == 200) {
 			var mtype = mime.getType(new URL(req.query.url).pathname.split(".")[new URL(req.query.url).pathname.split(".").length - 1])
-			res.set("Content-Type", mtype).send(b).end()
+			res.writeHead("Content-Type", mtype).send(b).end()
 		}
 	})
 })
@@ -91,7 +91,7 @@ async function handlePage(req, res) {
     request.request(options, async (e, r, b) => {
         if(!e && r.statusCode == 200) {
             b = processOpts(req.body, b)
-            b = fixAssets(req.body, b)
+            b = fixAssets(req.headers.host, b)
             res.send(b).end()
         } else {
            res.send(r.statusCode + ", Looks like it failed.").end()

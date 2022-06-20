@@ -3,7 +3,12 @@ var app = express()
 app.use(express.json())
 app.use(express.urlencoded())
 
-var request = require("request")
+
+if (process.env._ && process.env._.indexOf("heroku") !== -1) {
+    var request = require("tor-request")
+} else {
+    var request = require("request")
+}
 var mime = require("mime")
 const { URL } = require("url")
 

@@ -7,7 +7,8 @@ app.use(express.urlencoded())
 if (process.env._ && process.env._.indexOf("heroku") !== -1) {
     var request = require("tor-request")
 } else {
-    var request = require("request")
+    var request = {}
+    request.request = require("request")
 }
 var mime = require("mime")
 const { URL } = require("url")
@@ -69,7 +70,7 @@ app.get("/asset", async (req, res) => {
 		    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36'
         }
 	}	
-	request(options, async (e, r, b) => {
+	request.request(options, async (e, r, b) => {
 		if(!e && r.statusCode == 200) {
 			var mtype = mime.getType(req.query.url.split(".")[req.query.url.split(".").length - 1])
 			res.set("Content-Type", mtype).send(b).end()
@@ -87,7 +88,7 @@ async function handlePage(req, res) {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36'
         }
     }
-    request(options, async (e, r, b) => {
+    request.request(options, async (e, r, b) => {
         if(!e && r.statusCode == 200) {
             b = processOpts(req.body, b)
             b = fixAssets(req.body, b)

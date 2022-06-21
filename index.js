@@ -87,7 +87,7 @@ var fixAssets = (fdata, body, host) => {
         b = b.replace(element, new URL("https://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
     });
 
-    utils.matchRegex(/srcset="(.+?)"/ gmis, b).forEach(element => {
+    utils.matchRegex(/srcset="(.+?)"/gmis, b).forEach(element => {
         b = b.replace(element, "")
     })
 

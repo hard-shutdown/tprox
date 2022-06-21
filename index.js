@@ -1,5 +1,6 @@
 var express = require("express")
 const fs = require("fs")
+var utils = require("./utils")
 var app = express()
 app.use(express.json())
 app.use(express.urlencoded())
@@ -79,38 +80,27 @@ var processOpts = (fdata, body) => {
 
 var fixAssets = (fdata, body, host) => {
     var b = body
-    var regex = /src="\/(.+?)"/gmis
-    var arr = b.match(regex) || [""]
     var url = new URL(fdata.url).href
-    arr.forEach(element => {
+    utils.matchRegex(/src="\/(.+?)"/gmis, b).forEach(element => {
         element = element.replace("src=\"", "").replace("\"", "")
         var newhref = new URL(element, url)
         b = b.replace(element, new URL("https://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
     });
 
-    regex = /srcset="(.+?)"/gmis
-    arr = b.match(regex) || [""]
-    arr.forEach(element => {
+    utils.matchRegex(/srcset="(.+?)"/ gmis, b).forEach(element => {
         b = b.replace(element, "")
     })
 
-    regex = /<link(.*?) href="(.+?)"(.*?)>/gmis
-    arr = b.match(regex) || [""]
-
-    arr.forEach(element => {
-        var arr2 = element.match(/href="(.+?)"/gmis) || [""]
-        arr2.forEach(ele => {
+    utils.matchRegex(/<link(.*?) href="(.+?)"(.*?)>/gmis, b).forEach(element => {
+        utils.matchRegex(/href="(.+?)"/gmis, element).forEach(ele => {
             ele = ele.replace("href=\"", "").replace("\"", "")
             var newhref = new URL(ele, url)
             b = b.replace(ele, new URL("https://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
         })
     })
 
-    regex = /<a(.*?) href="(.+?)"(.*?)>/gmis
-    arr = b.match(regex) || [""]
-    arr.forEach(element => {
-        var arr2 = element.match(/href="(.+?)"/gmis) || [""]
-        arr2.forEach(ele => {
+    utils.matchRegex(/<a(.*?) href="(.+?)"(.*?)>/gmis, b).forEach(element => {
+        utils.matchRegex(/href="(.+?)"/gmis, element).forEach(ele => {
             ele = ele.replace("href=\"", "").replace("\"", "")
             var newhref = new URL(ele, url)
             b = b.replace(ele, new URL("http://" + host + "/go?url=" + encodeURIComponent(newhref.href)))

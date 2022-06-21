@@ -8,6 +8,7 @@ TProx is a web proxy that allows you to access Tor services from the clearnet.
 Currently, this program is in alpha. I am still setting up the parsing of assets and links, but it may be finished soon. Currently working features:
 
 - The server starts :P
+- Uses Tor for Routing
 - Some security features
 — Remove Scripts
 — Remove Canvas
@@ -19,7 +20,8 @@ Currently, this program is in alpha. I am still setting up the parsing of assets
 
 A lot. 
 
-- [ ] Actually use Tor **(PRIORITY)**
+- [ ] Finalize asset and outbound link fixes
+- [ ] Clean up code
 - [ ] Add more features
 - [ ] Add a nice GUI
 

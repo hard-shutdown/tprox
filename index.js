@@ -41,7 +41,7 @@ app.get("/", async (req, res) => {
                     document.location = '/go?url=' + encodeURIComponent(document.getElementById("furl").value)
                     return false;
                 }
-
+                
                 var form = document.getElementById('form');
                 if (form.attachEvent) {
                     form.attachEvent("submit", processForm);
@@ -63,23 +63,26 @@ app.get("/go", async (req, res) => {
     handlePage(req, res)
 })
 
-app.get("/asset", async (req, res) => {
+app.get("/asset", (req, res) => {
 	const options = {
         url: req.query.url,
         headers: {
 		    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36'
         }
-	}	
-	try{
-	request.request(options, async (e, r, b) => {
+    }
+    var mtype = mime.getType(new URL(req.query.url).pathname.split(".")[new URL(req.query.url).pathname.split(".").length - 1])
+    res.writeHead(200, {
+        "Content-Type": mtype
+    })
+	request.request(options).pipe(res)/*, (e, r, b) => {
 		if(!e && r.statusCode == 200) {
-			var mtype = mime.getType(new URL(req.query.url).pathname.split(".")[new URL(req.query.url).pathname.split(".").length - 1])
-			res.writeHead("Content-Type", mtype).send(b).end()
+			res.writeHead(200, {
+                "Content-Type": mtype,
+                "Content-Length": Buffer.from(b).length
+            }).end(b, )
+
 		}
-	})
-	} catch (e) {
-	    console.log(e)
-	}
+	})*/
 })
 
 app.listen(process.env["PORT"] || 3000)

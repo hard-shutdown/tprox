@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>tprox</title>
+</head>
+
+<body>
+    <h1>TProx</h1>
+    <form action="/go" id="form">
+        <label for="furl">URL:</label>
+        <br>
+        <input type="text" id="furl" name="url" value="https://www.google.com/">
+        <br>
+        <br>
+        <input type="checkbox" id="fscripts" name="scripts" value="true">
+        <label for="fscripts"> Remove Scripts</label>
+        <br>
+        <input type="checkbox" id="fcanvas" name="canvas" value="true">
+        <label for="fcanvas"> Remove Canvases</label>
+        <br>
+        <input type="checkbox" id="ftitle" name="title" value="true">
+        <label for="ftitle"> Remove Page Title</label>
+        <br>
+        <input type="checkbox" id="flocalstorage" name="lstorage" value="true">
+        <label for="flocalstorage"> Remove LocalStorage</label>
+        <br>
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+    <script>
+        function processForm(e) {
+            if (e.preventDefault) e.preventDefault();
+            var options = function () {
+                return `${(document.getElementById("fscripts").checked ? "&scripts=1" : "")}${(document.getElementById("fcanvas").checked ? "&canvas=1" : "")}${(document.getElementById("ftitle").checked ? "&title=1" : "")}${(document.getElementById("flocalstorage").checked ? "&lstorage=1" : "")}`
+            }
+            document.location = '/go?url=' + encodeURIComponent(document.getElementById("furl").value) + options()
+            return false;
+        }
+
+        var form = document.getElementById('form');
+        if (form.attachEvent) {
+            form.attachEvent("submit", processForm);
+        } else {
+            form.addEventListener("submit", processForm);
+        }
+    </script>
+</body>
+
+</html>

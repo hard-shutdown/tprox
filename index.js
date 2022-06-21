@@ -1,4 +1,5 @@
 var express = require("express")
+const fs = require("fs")
 var app = express()
 app.use(express.json())
 app.use(express.urlencoded())
@@ -14,45 +15,7 @@ var mime = require("mime")
 const { URL } = require("url")
 
 app.get("/", async (req, res) => {
-    res.end(`
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <title>tprox</title>
-            </head>
-            <body>
-				<h1>TProx</h1>
-                <form action="/go" id="form">
-                    <label for="furl">URL:</label><br>
-                    <input type="text" id="furl" name="url" value="https://www.google.com/"><br><br>
-                    <input type="checkbox" id="fscripts" name="scripts" value="true">
-                    <label for="fscripts"> Remove Scripts</label><br>
-                    <input type="checkbox" id="fcanvas" name="canvas" value="true">
-                    <label for="fcanvas"> Remove Canvases</label><br>
-					<input type="checkbox" id="ftitle" name="title" value="true">
-                    <label for="ftitle"> Remove Page Title</label><br>
-                    <input type="checkbox" id="flocalstorage" name="lstorage" value="true">
-                    <label for="flocalstorage"> Remove LocalStorage</label>
-                    <br><br><input type="submit" value="Submit">
-                </form>
-				<script>
-				function processForm(e) {
-                    if (e.preventDefault) e.preventDefault();
-                    document.location = '/go?url=' + encodeURIComponent(document.getElementById("furl").value)
-                    return false;
-                }
-                
-                var form = document.getElementById('form');
-                if (form.attachEvent) {
-                    form.attachEvent("submit", processForm);
-                } else {
-                    form.addEventListener("submit", processForm);
-                }
-				
-				</script>
-            </body>
-        </html>
-    `)
+    fs.createReadStream("index.html").pipe(res)
 })
 
 app.post("/go", async (req, res) => {
@@ -63,7 +26,7 @@ app.get("/go", async (req, res) => {
     handlePage(req, res)
 })
 
-app.get("/asset", (req, res) => {
+app.get("/asset", async (req, res) => {
 	const options = {
         url: req.query.url,
         headers: {
@@ -74,15 +37,8 @@ app.get("/asset", (req, res) => {
     res.writeHead(200, {
         "Content-Type": mtype
     })
-	request.request(options).pipe(res)/*, (e, r, b) => {
-		if(!e && r.statusCode == 200) {
-			res.writeHead(200, {
-                "Content-Type": mtype,
-                "Content-Length": Buffer.from(b).length
-            }).end(b, )
+    request.request(options).on('error', (e) => {res.end("Failed, " + e)}).pipe(res)
 
-		}
-	})*/
 })
 
 app.listen(process.env["PORT"] || 3000)
@@ -98,7 +54,7 @@ async function handlePage(req, res) {
     request.request(options, async (e, r, b) => {
         if(!e && r.statusCode == 200) {
             b = processOpts(req.body, b)
-            b = fixAssets(req.headers.host, b)
+            b = fixAssets(req.body, b, req.headers.host)
             res.send(b).end()
         } else {
            res.send(r.statusCode + ", Looks like it failed.").end()
@@ -121,16 +77,45 @@ var processOpts = (fdata, body) => {
     return b
 }
 
-var fixAssets = (fdata, body) => {
+var fixAssets = (fdata, body, host) => {
     var b = body
     var regex = /src="\/(.+?)"/gmis
     var arr = b.match(regex) || [""]
     var url = new URL(fdata.url).href
-
     arr.forEach(element => {
         element = element.replace("src=\"", "").replace("\"", "")
         var newhref = new URL(element, url)
-        b = b.replace(element, newhref.href)
+        b = b.replace(element, new URL("https://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
     });
+
+    regex = /srcset="(.+?)"/gmis
+    arr = b.match(regex) || [""]
+    arr.forEach(element => {
+        b = b.replace(element, "")
+    })
+
+    regex = /<link(.*?) href="(.+?)"(.*?)>/gmis
+    arr = b.match(regex) || [""]
+
+    arr.forEach(element => {
+        var arr2 = element.match(/href="(.+?)"/gmis) || [""]
+        arr2.forEach(ele => {
+            ele = ele.replace("href=\"", "").replace("\"", "")
+            var newhref = new URL(ele, url)
+            b = b.replace(ele, new URL("https://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
+        })
+    })
+
+    regex = /<a(.*?) href="(.+?)"(.*?)>/gmis
+    arr = b.match(regex) || [""]
+    arr.forEach(element => {
+        var arr2 = element.match(/href="(.+?)"/gmis) || [""]
+        arr2.forEach(ele => {
+            ele = ele.replace("href=\"", "").replace("\"", "")
+            var newhref = new URL(ele, url)
+            b = b.replace(ele, new URL("http://" + host + "/go?url=" + encodeURIComponent(newhref.href)))
+        })
+    })
+
     return b
 }

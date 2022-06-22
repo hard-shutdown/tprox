@@ -2,18 +2,18 @@ var express = require("express")
 const fs = require("fs")
 var utils = require("./utils")
 var app = express()
+var mime = require("mime")
+const { URL } = require("url")
 app.use(express.json())
 app.use(express.urlencoded())
 
 
-if (process.env._ && process.env._.indexOf("heroku") !== -1) {
+if ((process.env._ && process.env._.indexOf("heroku") !== -1) || process.env.TOR == true) {
     var request = require("tor-request")
 } else {
     var request = {}
     request.request = require("request")
 }
-var mime = require("mime")
-const { URL } = require("url")
 
 app.get("/", async (req, res) => {
     fs.createReadStream("index.html").pipe(res)
@@ -81,24 +81,27 @@ var processOpts = (fdata, body) => {
 var fixAssets = (fdata, body, host) => {
     var b = body
     var url = new URL(fdata.url).href
+    
     utils.matchRegex(/src="\/(.+?)"/gmis, b).forEach(element => {
         element = element.replace("src=\"", "").replace("\"", "")
         var newhref = new URL(element, url)
-        b = b.replace(element, new URL("https://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
+        if(encodeURIComponent(newhref.href) !== encodeURIComponent(url)) b = b.replace(element, new URL("http://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
     });
+    
 
     utils.matchRegex(/srcset="(.+?)"/gmis, b).forEach(element => {
         b = b.replace(element, "")
     })
-
+    
     utils.matchRegex(/<link(.*?) href="(.+?)"(.*?)>/gmis, b).forEach(element => {
         utils.matchRegex(/href="(.+?)"/gmis, element).forEach(ele => {
             ele = ele.replace("href=\"", "").replace("\"", "")
             var newhref = new URL(ele, url)
-            b = b.replace(ele, new URL("https://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
+            if(encodeURIComponent(newhref.href) !== encodeURIComponent(url)) b = b.replace(element, new URL("http://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
         })
     })
-
+    
+   
     utils.matchRegex(/<a(.*?) href="(.+?)"(.*?)>/gmis, b).forEach(element => {
         utils.matchRegex(/href="(.+?)"/gmis, element).forEach(ele => {
             ele = ele.replace("href=\"", "").replace("\"", "")

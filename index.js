@@ -53,10 +53,12 @@ async function handlePage(req, res) {
         }
     }
     request.request(options, async (e, r, b) => {
-        if(!e && r.statusCode == 200) {
+        if(!e) {
             b = processOpts(req.body, b)
             b = fixAssets(req.body, b, req.headers.host)
-            res.send(b).end()
+            res.writeHead(r.statusCode, {
+                'Content-Type': r.headers["Content-Type"] || "text/html"
+            }).end(b)
         } else {
            res.send(r.statusCode + ", Looks like it failed.").end()
         }
@@ -82,11 +84,10 @@ var fixAssets = (fdata, body, host) => {
     var b = body
     var url = new URL(fdata.url).href
     
-    utils.matchRegex(/src="\/(.+?)"/gmis, b).forEach(element => {
+    utils.matchRegex(/src="(.+?)"/gmis, b).forEach(element => {
         element = element.replace("src=\"", "").replace("\"", "")
-        var newhref = new URL(element, url)
-        if(encodeURIComponent(newhref.href) !== encodeURIComponent(url)) b = b.replace(element, new URL("http://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
-    });
+        b = b.replace(element, "http://" + host + "/asset?url=" + encodeURIComponent(new URL(element, new URL(url).origin).href))
+    })
     
 
     utils.matchRegex(/srcset="(.+?)"/gmis, b).forEach(element => {
@@ -96,8 +97,7 @@ var fixAssets = (fdata, body, host) => {
     utils.matchRegex(/<link(.*?) href="(.+?)"(.*?)>/gmis, b).forEach(element => {
         utils.matchRegex(/href="(.+?)"/gmis, element).forEach(ele => {
             ele = ele.replace("href=\"", "").replace("\"", "")
-            var newhref = new URL(ele, url)
-            if(encodeURIComponent(newhref.href) !== encodeURIComponent(url)) b = b.replace(element, new URL("http://" + host + "/asset?url=" + encodeURIComponent(newhref.href)))
+            b = b.replace(ele, "http://" + host + "/asset?url=" + encodeURIComponent(new URL(ele, new URL(url).origin).href))
         })
     })
     
@@ -105,8 +105,7 @@ var fixAssets = (fdata, body, host) => {
     utils.matchRegex(/<a(.*?) href="(.+?)"(.*?)>/gmis, b).forEach(element => {
         utils.matchRegex(/href="(.+?)"/gmis, element).forEach(ele => {
             ele = ele.replace("href=\"", "").replace("\"", "")
-            var newhref = new URL(ele, url)
-            b = b.replace(ele, new URL("http://" + host + "/go?url=" + encodeURIComponent(newhref.href)))
+            b = b.replace(ele, "http://" + host + "/asset?url=" + encodeURIComponent(new URL(ele, new URL(url).origin).href))
         })
     })
 

@@ -88,4 +88,5 @@ var fixAssets = (fdata, body, host) => {
         var url = new URL(src, fdata.url)
         val.attr("src", new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)))
     })
+    return $.html()
 }

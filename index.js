@@ -31,7 +31,7 @@ app.get("/asset", async (req, res) => {
 	const options = {
         url: req.query.url,
         headers: {
-		    'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 7.0; InfoPath.3; .NET CLR 3.1.40767; Trident/6.0; en-IN)'
+		    'User-Agent': 'ur mom'
         }
     }
     var mtype = mime.getType(new URL(req.query.url).pathname.split(".")[new URL(req.query.url).pathname.split(".").length - 1])
@@ -49,7 +49,7 @@ async function handlePage(req, res) {
     const options = {
         url: req.body.url,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 7.0; InfoPath.3; .NET CLR 3.1.40767; Trident/6.0; en-IN)'
+          'User-Agent': 'ur mom'
         }
     }
     request.request(options, async (e, r, b) => {

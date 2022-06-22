@@ -1,5 +1,6 @@
 var express = require("express")
 const fs = require("fs")
+var cheerio = require("cheerio")
 var utils = require("./utils")
 var app = express()
 var mime = require("mime")
@@ -81,33 +82,10 @@ var processOpts = (fdata, body) => {
 }
 
 var fixAssets = (fdata, body, host) => {
-    var b = body
-    var url = new URL(fdata.url).href
-    
-    utils.matchRegex(/src="(.+?)"/gmis, b).forEach(element => {
-        element = element.replace("src=\"", "").replace("\"", "")
-        b = b.replace(element, "http://" + host + "/asset?url=" + encodeURIComponent(new URL(element, new URL(url).origin).href))
+    var $ = cheerio.load(body)
+    $("script[src]").each((index, val) => {
+        var src = val.attr("src")
+        var url = new URL(src, fdata.url)
+        val.attr("src", new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)))
     })
-    
-
-    utils.matchRegex(/srcset="(.+?)"/gmis, b).forEach(element => {
-        b = b.replace(element, "")
-    })
-    
-    utils.matchRegex(/<link(.*?) href="(.+?)"(.*?)>/gmis, b).forEach(element => {
-        utils.matchRegex(/href="(.+?)"/gmis, element).forEach(ele => {
-            ele = ele.replace("href=\"", "").replace("\"", "")
-            b = b.replace(ele, "http://" + host + "/asset?url=" + encodeURIComponent(new URL(ele, new URL(url).origin).href))
-        })
-    })
-    
-   
-    utils.matchRegex(/<a(.*?) href="(.+?)"(.*?)>/gmis, b).forEach(element => {
-        utils.matchRegex(/href="(.+?)"/gmis, element).forEach(ele => {
-            ele = ele.replace("href=\"", "").replace("\"", "")
-            b = b.replace(ele, "http://" + host + "/asset?url=" + encodeURIComponent(new URL(ele, new URL(url).origin).href))
-        })
-    })
-
-    return b
 }

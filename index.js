@@ -32,7 +32,7 @@ app.get("/asset", async (req, res) => {
 	const options = {
         url: req.query.url,
         headers: {
-		    'User-Agent': 'ur mom'
+		    'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; WOW64; Trident/8.0; .NET4.0C; .NET4.0E)'
         }
     }
     var mtype = mime.getType(new URL(req.query.url).pathname.split(".")[new URL(req.query.url).pathname.split(".").length - 1])
@@ -50,7 +50,7 @@ async function handlePage(req, res) {
     const options = {
         url: req.body.url,
         headers: {
-          'User-Agent': 'ur mom'
+          'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; WOW64; Trident/8.0; .NET4.0C; .NET4.0E)'
         }
     }
     request.request(options, async (e, r, b) => {
@@ -84,9 +84,19 @@ var processOpts = (fdata, body) => {
 var fixAssets = (fdata, body, host) => {
     var $ = cheerio.load(body)
     $("script[src]").each((index, val) => {
-        var src = val.attr("src")
+        var src = val.attribs.src
         var url = new URL(src, fdata.url)
-        val.attr("src", new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)))
+        val.attribs.src = new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)).href
+    })
+    $("link[href]").each((index, val) => {
+        var src = val.attribs.href
+        var url = new URL(src, fdata.url)
+        val.attribs.href = new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)).href
+    })
+    $("a[href]").each((index, val) => {
+        var src = val.attribs.href
+        var url = new URL(src, fdata.url)
+        val.attribs.href = new URL("http://" + host + "/go?url=" + encodeURIComponent(url)).href
     })
     return $.html()
 }

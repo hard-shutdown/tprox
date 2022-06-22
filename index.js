@@ -29,17 +29,23 @@ app.get("/go", async (req, res) => {
 })
 
 app.get("/asset", async (req, res) => {
-	const options = {
-        url: req.query.url,
-        headers: {
-		    'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; WOW64; Trident/8.0; .NET4.0C; .NET4.0E)'
+    if(req.query.url.startsWith("data:")) {
+        res.writeHead(200, {
+            'Content-Type': new String(req.query.url).substring(5).split(";")[0]
+        }).end(Buffer.from((new String(req.query.url).substring(5).split(";")[0]), 'base64'))
+    } else {
+	    const options = {
+            url: req.query.url,
+            headers: {
+		        'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; WOW64; Trident/8.0; .NET4.0C; .NET4.0E)'
+            }
         }
+        var mtype = mime.getType(new URL(req.query.url).pathname.split(".")[new URL(req.query.url).pathname.split(".").length - 1])
+        res.writeHead(200, {
+            "Content-Type": mtype
+        })
+        request.request(options).on('error', (e) => {res.end("Failed, " + e)}).pipe(res)
     }
-    var mtype = mime.getType(new URL(req.query.url).pathname.split(".")[new URL(req.query.url).pathname.split(".").length - 1])
-    res.writeHead(200, {
-        "Content-Type": mtype
-    })
-    request.request(options).on('error', (e) => {res.end("Failed, " + e)}).pipe(res)
 
 })
 
@@ -56,7 +62,7 @@ async function handlePage(req, res) {
     request.request(options, async (e, r, b) => {
         if(!e) {
             b = processOpts(req.body, b)
-            b = fixAssets(req.body, b, req.headers.host)
+            b = fixAssets(req.body, b, req.headers.host, req.url)
             res.writeHead(r.statusCode, {
                 'Content-Type': r.headers["Content-Type"] || "text/html"
             }).end(b)
@@ -81,8 +87,10 @@ var processOpts = (fdata, body) => {
     return b
 }
 
-var fixAssets = (fdata, body, host) => {
+var fixAssets = (fdata, body, host, reqUrl) => {
     var $ = cheerio.load(body)
+    var opts = new URL("http://" + host + reqUrl).searchParams
+    opts.delete("url")
     $("script[src]").each((index, val) => {
         var src = val.attribs.src
         var url = new URL(src, fdata.url)
@@ -101,7 +109,7 @@ var fixAssets = (fdata, body, host) => {
     $("a[href]").each((index, val) => {
         var src = val.attribs.href
         var url = new URL(src, fdata.url)
-        val.attribs.href = new URL("http://" + host + "/go?url=" + encodeURIComponent(url)).href
+        val.attribs.href = new URL("http://" + host + "/go?url=" + encodeURIComponent(url) + "&" + opts.toString()).href
     })
     return $.html()
 }

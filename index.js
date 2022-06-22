@@ -88,6 +88,11 @@ var fixAssets = (fdata, body, host) => {
         var url = new URL(src, fdata.url)
         val.attribs.src = new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)).href
     })
+    $("img[src]").each((index, val) => {
+        var src = val.attribs.src
+        var url = new URL(src, fdata.url)
+        val.attribs.src = new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)).href
+    })
     $("link[href]").each((index, val) => {
         var src = val.attribs.href
         var url = new URL(src, fdata.url)

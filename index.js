@@ -10,7 +10,7 @@ app.use(express.urlencoded())
 
 app.enable('trust proxy')
 app.use((req, res, next) => {
-    req.secure ? next() : res.redirect('https://' + req.headers.host + req.url)
+    req.protocol == "https" ? next() : res.redirect('https://' + req.headers.host + req.url)
 })
 
 if ((process.env._ && process.env._.indexOf("heroku") !== -1) || process.env.TOR == true) {

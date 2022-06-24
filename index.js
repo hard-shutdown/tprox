@@ -71,7 +71,7 @@ async function handlePage(req, res) {
                 'Content-Type': r.headers["Content-Type"] || "text/html"
             }).end(b)
         } else {
-           res.send(r.statusCode + ", Looks like it failed.").end()
+           res.send(e + ", Looks like it failed.").end()
         }
     })
 }

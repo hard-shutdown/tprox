@@ -101,9 +101,12 @@ var fixAssets = (fdata, body, host, reqUrl) => {
         val.attribs.src = new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)).href
     })
     $("img[src]").each((index, val) => {
+
         var src = val.attribs.src
-        var url = new URL(src, fdata.url)
-        val.attribs.src = new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)).href
+        if(!src.startsWith("data:")) {
+            var url = new URL(src, fdata.url)
+            val.attribs.src = new URL("http://" + host + "/asset?url=" + encodeURIComponent(url)).href
+        }
     })
     $("link[href]").each((index, val) => {
         var src = val.attribs.href
